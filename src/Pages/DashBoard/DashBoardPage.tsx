@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useState, useReducer } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { toast } from "react-toastify";
 import { CreateTodo } from "../AddTodo/CreateTodo";
 import Table from '@mui/material/Table';
@@ -10,8 +10,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { Paper } from "@mui/material";
 import Button from '@mui/material/Button';
+import { TodoActionsEnum } from '../../enums/todo-action.enum';
+import { TaskContext, TodoContextInterface } from '../../Context/Provider';
 
-interface TodoInterface {
+ export interface TodoInterface {
     completed: boolean,
     createdAt: string,
     description: string,
@@ -19,55 +21,11 @@ interface TodoInterface {
     isComplete: boolean
 }
 
-interface AddTodoAction {
-    type: "ADD_TODO",
-    payload: { todo: TodoInterface }
-}
-
-interface DeleteTodoAction {
-    type: "DELETE_TODO",
-    payload: { id: string }
-}
-
-interface MarkAsCompletedAction {
-    type: "MARK_AS_COMPLETED",
-    payload: { id: string }
-}
-
-interface SetTodosAction {
-    type: "SET_TODO",
-    payload: { todos: TodoInterface[] }
-}
-
-export type TodoAction = AddTodoAction | DeleteTodoAction | MarkAsCompletedAction | SetTodosAction
-
-const todoReducer = (todos: TodoInterface[], action: TodoAction) => {
-    switch (action.type) {
-        case "ADD_TODO":
-            return [...todos, action.payload.todo];
-
-        case "DELETE_TODO":
-            return [...todos.filter((item: any) => item._id !== action.payload.id)];
-
-        case "MARK_AS_COMPLETED":
-            return todos.map((todo) => {
-                if (todo._id === action.payload.id) {
-                    return { ...todo, isComplete: !todo.isComplete };
-                }
-                return todo;
-            });
-
-        case "SET_TODO":
-            return [...action.payload.todos];
-
-        default:
-            return todos;
-    }
-}
-export function DashBoardPageReducer() {
+export function DashBoardPage() {
     // const [todos, setTodos] = useState<TodoInterface[]>([]);
     const [editTodo, setEditTodo] = useState<TodoInterface | null>(null);
-    const [todos, dispatch] = useReducer(todoReducer, []);
+    const {todos, dispatch}: TodoContextInterface = useContext(TaskContext);
+
     const url = 'https://api-nodejs-todolist.herokuapp.com';
 
     useEffect(() => {
@@ -75,14 +33,14 @@ export function DashBoardPageReducer() {
     }, []);
 
     const addTodo = (todo: TodoInterface) => {
-        dispatch({ type: "ADD_TODO", payload: { todo: todo } });
+        dispatch({ type: TodoActionsEnum.ADD_TODO, payload: { todo: todo } });
     }
 
     const deleteTodo = async (id: string) => {
         let token = localStorage.getItem("authToken");
         try {
             await axios.delete(`${url}/task/${id}`, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } })
-            dispatch({ type: "DELETE_TODO", payload: { id: id } });
+            dispatch({ type: TodoActionsEnum.DELETE_TODO, payload: { id: id } });
 
             // setTodos(
             //     [...todos.filter((item: any) => item._id !== id)]);
@@ -97,9 +55,9 @@ export function DashBoardPageReducer() {
         let token = localStorage.getItem("authToken");
         try {
             const response = await axios.get(`${url}/task`, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } });
-            console.log("table data-rt", response );
+            console.log("table data", response );
             dispatch({
-                type: "SET_TODO",
+                type: TodoActionsEnum.SET_TODO,
                 payload: { todos: response.data.data }
             });
             // setTodos(response.data.data || undefined);
@@ -159,7 +117,7 @@ export function DashBoardPageReducer() {
         const index: number = todos.findIndex((todo: TodoInterface) => todo._id === updateTodo._id);
         todos[index] = updateTodo;
         dispatch({
-            type: "MARK_AS_COMPLETED",
+            type: TodoActionsEnum.MARK_AS_COMPLETED,
             payload: { id: updateTodo._id },
         });
         // setTodos([...todos]);
