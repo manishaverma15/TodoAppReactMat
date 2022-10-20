@@ -8,12 +8,14 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { Paper } from "@mui/material";
+import { Paper, Typography } from "@mui/material";
 import Button from '@mui/material/Button';
 import { TodoActionsEnum } from '../../enums/todo-action.enum';
 import { TaskContext, TodoContextInterface } from '../../Context/Provider';
+import { ThemeContext, ThemeContextInterface } from "../../Context/DisplayContext/DisplayProvider";
+import { ThemeActionEnum } from "../../enums/display-theme.enum";
 
- export interface TodoInterface {
+export interface TodoInterface {
     completed: boolean,
     createdAt: string,
     description: string,
@@ -24,7 +26,9 @@ import { TaskContext, TodoContextInterface } from '../../Context/Provider';
 export function DashBoardPage() {
     // const [todos, setTodos] = useState<TodoInterface[]>([]);
     const [editTodo, setEditTodo] = useState<TodoInterface | null>(null);
-    const {todos, dispatch}: TodoContextInterface = useContext(TaskContext);
+    const { todos, dispatch }: TodoContextInterface = useContext(TaskContext);
+    const theme: ThemeContextInterface = useContext(ThemeContext);
+    console.log("theme", theme);
 
     const url = 'https://api-nodejs-todolist.herokuapp.com';
 
@@ -55,7 +59,7 @@ export function DashBoardPage() {
         let token = localStorage.getItem("authToken");
         try {
             const response = await axios.get(`${url}/task`, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } });
-            console.log("table data", response );
+            console.log("table data", response);
             dispatch({
                 type: TodoActionsEnum.SET_TODO,
                 payload: { todos: response.data.data }
@@ -123,8 +127,28 @@ export function DashBoardPage() {
         // setTodos([...todos]);
     }
 
+    const onClickDarkModeTheme = () => {
+        theme.dispatch({
+            type: ThemeActionEnum.DARK_THEME,   
+        });
+    }
+
+    const onClickLightModeTheme = () => {
+        theme.dispatch({
+            type: ThemeActionEnum.LIGHT_THEME,
+        });
+    }
+
     return (
         <>
+        <Paper sx={{bgcolor: theme.theme.primary}}>
+            <div>
+                <Typography variant="h5" component="h2">
+                    Click on the Button to choose the Theme 
+                </Typography>
+                <Button sx={{ width: 200 }} variant="outlined"  onClick={onClickDarkModeTheme}>Dark Theme</Button>
+                <Button sx={{ width: 200 }} variant="outlined" onClick={onClickLightModeTheme}>Light Theme</Button>
+            </div>
             <div style={{ height: 700, width: '100%' }}>
                 <div>
                     <CreateTodo addTodo={addTodo} editTodo={editTodo} setEditTodo={setEditTodo} replaceTodo={replaceTodo} />
@@ -161,6 +185,7 @@ export function DashBoardPage() {
                     </Table>
                 </TableContainer>
             </div>
+        </Paper>
         </>
     )
 }

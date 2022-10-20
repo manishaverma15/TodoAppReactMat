@@ -1,0 +1,5 @@
+export enum ThemeActionEnum {
+    DARK_THEME="DARK_THEME",
+    LIGHT_THEME="LIGHT_THEME",
+    TOGGLE_THEME="TOGGLE_THEME"
+}
